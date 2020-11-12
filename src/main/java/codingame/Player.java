@@ -1,6 +1,8 @@
 package codingame;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -42,13 +44,53 @@ class Player {
                 inventory.setScore(in.nextInt());
             }
 
-            // Write an action using System.out.println()
-            // To debug: System.err.println("Debug messages...");
+            List<Recipe> affordableRecipes = UtilLogic.getAffordableRecipes(recipes, inventory);
 
+            int id = UtilLogic.getMostUsefulRecipeId(affordableRecipes);
+            System.err.println("RS: " + recipes.size());
+            recipes.remove(id);
+            System.err.println("RS: " + recipes.size());
 
             // in the first league: BREW <id> | WAIT; later: BREW <id> | CAST <id> [<times>] | LEARN <id> | REST | WAIT
-            System.out.println("BREW 0");
+            System.out.println("BREW " + id + " : " + id);
         }
+    }
+}
+
+class UtilLogic {
+    public static List<Recipe> getAffordableRecipes(Map<Integer, Recipe> recipes, Inventory inventory) {
+        List<Recipe> affordableRecipes = new ArrayList<>();
+        for (Recipe recipe : recipes.values()) {
+            if (recipe.getIngCount_1() <= inventory.getIngCount_1()
+                    && recipe.getIngCount_2() <= inventory.getIngCount_2()
+                    && recipe.getIngCount_3() <= inventory.getIngCount_3()
+                    && recipe.getIngCount_4() <= inventory.getIngCount_4()) {
+                affordableRecipes.add(recipe);
+            }
+        }
+
+        return affordableRecipes;
+    }
+
+    public static int getMostUsefulRecipeId(List<Recipe> recipes) {
+        double minWeight = -100;
+        int numberOfIngredients = -100;
+        int id = 0;
+        for (Recipe recipe : recipes) {
+            double recipeWeight = recipe.getIngCount_1() * 0.2 + recipe.getIngCount_2() * 0.3
+                    + recipe.getIngCount_3() * 0.5 + recipe.getIngCount_4();
+            int recipeIngredientsNumber = recipe.getIngCount_1() + recipe.getIngCount_2()
+                    + recipe.getIngCount_3() + recipe.getIngCount_4();
+            if (recipeWeight >= minWeight && recipeIngredientsNumber >= numberOfIngredients) {
+                System.err.println(recipeWeight + " " + recipeIngredientsNumber + " " + recipe.getId());
+
+                minWeight = recipeWeight;
+                numberOfIngredients = recipeIngredientsNumber;
+                id = recipe.getId();
+            }
+        }
+
+        return id;
     }
 }
 
