@@ -13,12 +13,16 @@ class Player {
         Scanner in = new Scanner(System.in);
 
         List<String> actionList = new ArrayList<>();
-        Map<Integer, Recipe> recipes = new HashMap<>();
+        Map<Integer, Recipe> recipes;
         Map<Integer, Recipe> myActions = new HashMap<>();
         Map<Integer, Recipe> opponentActions = new HashMap<>();
+        Map<Integer, Recipe> learnMap = new HashMap<>();
+        int targetId = 0;
 
         while (true) {
             //<editor-fold desc="Game setup">
+            recipes = new HashMap<>();
+
             int actionCount = in.nextInt(); // the number of spells and recipes in play
             for (int i = 0; i < actionCount; i++) {
                 Recipe recipe = new Recipe();
@@ -40,6 +44,8 @@ class Player {
                     myActions.put(recipe.getId(), recipe);
                 } else if ("OPPONENT_CAST".equals(recipe.getActionType())) {
                     opponentActions.put(recipe.getId(), recipe);
+                } else if ("LEARN".equals(recipe.getActionType())) {
+                    learnMap.put(recipe.getId(), recipe);
                 }
             }
 
@@ -67,11 +73,13 @@ class Player {
             //      BREW <id> | WAIT
             //      BREW <id> | CAST <id> [<times>] | LEARN <id> | REST | WAIT
 
-            System.err.println("IS: " + myInventory.size());
-            if (actionList.isEmpty()) {
-                Recipe recipe = recipes.get(UtilLogic.getMostUsefulRecipeId(recipes.values(), myActions.values(), myInventory));
+            if (actionList.isEmpty() || (targetId != 0 && recipes.get(targetId) == null)) {
+                targetId = UtilLogic.getMostUsefulRecipeId(recipes.values(), myActions.values(), myInventory);
+                Recipe recipe = recipes.get(targetId);
 
                 boolean isAffordable = UtilLogic.isRecipeAffordable(recipe, myInventory);
+
+                actionList = new ArrayList<>();
 
                 if (isAffordable) {
                     String action = "BREW " + recipe.getId();
@@ -96,16 +104,9 @@ class Player {
                 }
             }
 
-            if (!actionList.get(actionList.size() - 1).contains("REST")) {
+            if (actionList.isEmpty() || !actionList.get(actionList.size() - 1).contains("REST")) {
                 actionList.add("REST");
             }
-
-            System.err.println();
-            for (String action : actionList) {
-                System.err.print(action + " ");
-            }
-            System.err.println();
-
 
             System.out.println(actionList.get(0));
             actionList.remove(0);
@@ -164,6 +165,8 @@ class UtilLogic {
     public static List<String> createActionList(Map<Integer, Recipe> myActions, Recipe myInventory, Recipe recipe, List<String> actionList) {
         List<Recipe> affordableCasts = getAffordableCasts(myActions.values(), myInventory);
         int castId = getUsefulCast(affordableCasts, myInventory, recipe);
+
+
         if (castId == 0) {
             return actionList;
         } else {
@@ -188,29 +191,20 @@ class UtilLogic {
         int id = 0;
 
         for (Recipe cast : affordableCasts) {
-            Recipe future = sum(cast, myInventory);
             String castType = analyseCast(cast);
-
-            System.err.println(myInventory.printData());
-            System.err.println(recipe.printData());
-            System.err.println(cast.printData());
-            System.err.println(future.printData());
 
             boolean firstNotEnough = myInventory.getIngCount_1() + recipe.getIngCount_1() < 0 && recipe.getIngCount_1() < 0;
             boolean secondNotEnough = myInventory.getIngCount_2() + recipe.getIngCount_2() < 0 && recipe.getIngCount_2() < 0;
             boolean thirdNotEnough = myInventory.getIngCount_3() + recipe.getIngCount_3() < 0 && recipe.getIngCount_3() < 0;
             boolean fourthNotEnough = myInventory.getIngCount_4() + recipe.getIngCount_4() < 0 && recipe.getIngCount_4() < 0;
 
-            System.err.println("FNE: " + firstNotEnough);
-            System.err.println("SNE: " + secondNotEnough);
-            System.err.println("TNE: " + thirdNotEnough);
-            System.err.println("FNE: " + fourthNotEnough);
-
             if (firstNotEnough && myInventory.getIngCount_1() < 5) {
                 if (castType.contains("P_FIRST")) {
                     return cast.getId();
                 }
-            } else if (secondNotEnough) {
+            }
+
+            if (secondNotEnough) {
                 if (castType.contains("P_SECOND")) {
                     return cast.getId();
                 }
@@ -218,7 +212,9 @@ class UtilLogic {
                 if (castType.contains("P_FIRST") && myInventory.getIngCount_1() == 0) {
                     return cast.getId();
                 }
-            } else if (thirdNotEnough) {
+            }
+
+            if (thirdNotEnough) {
                 if (castType.contains("P_THIRD")) {
                     return cast.getId();
                 }
@@ -230,7 +226,9 @@ class UtilLogic {
                 if (castType.contains("P_FIRST") && myInventory.getIngCount_1() == 0) {
                     return cast.getId();
                 }
-            } else if (fourthNotEnough) {
+            }
+
+            if (fourthNotEnough) {
                 if (castType.contains("P_FOURTH")) {
                     return cast.getId();
                 }
