@@ -1,12 +1,21 @@
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 class Player {
 
     public static void main(String args[]) {
         Scanner in = new Scanner(System.in);
+        Map<Integer, Integer[]> casts;
+        Map<Integer, Integer[]> opponentCasts;
+        Map<Integer, Integer[]> studies;
+        Map<Integer, Integer[]> brews;
 
         while (true) {
-
+            casts = new HashMap<>();
+            opponentCasts = new HashMap<>();
+            studies = new HashMap<>();
+            brews = new HashMap<>();
             int actionCount = in.nextInt();
             long timeStart = System.nanoTime();
             for (int i = 0; i < actionCount; i++) {
@@ -24,15 +33,36 @@ class Player {
                     cast = 3;
                 }
 
-                int[] array = new int[]{recipeId, cast, in.nextInt(), in.nextInt(), in.nextInt(),
+                Integer[] array = new Integer[]{recipeId, cast, in.nextInt(), in.nextInt(), in.nextInt(),
                         in.nextInt(), in.nextInt(), in.nextInt(), in.nextInt(), in.nextInt(), in.nextInt()};
+
+                if (cast == 0) {
+                    casts.put(array[0], array);
+                } else if (cast == 1) {
+                    opponentCasts.put(array[0], array);
+                } else if (cast == 2) {
+                    studies.put(array[0], array);
+                } else {
+                    brews.put(array[0], array);
+                }
             }
 
+            System.err.println("CASTS: " + casts.size());
+            System.err.println("OPPCS: " + opponentCasts.size());
+            System.err.println("STUDY: " + studies.size());
+            System.err.println("BREWS: " + brews.size());
+
+            int[] myBag;
+            int myScore;
+            int[] opponentBag;
+            int opponentsScore;
             for (int i = 0; i < 2; i++) {
                 if (i == 0) {
-                    int[] array = {-1, -1, in.nextInt(), in.nextInt(), in.nextInt(), in.nextInt(), in.nextInt()};
+                    myBag = new int[]{in.nextInt(), in.nextInt(), in.nextInt(), in.nextInt()};
+                    myScore = in.nextInt();
                 } else {
-                    int[] array = {-2, -2, in.nextInt(), in.nextInt(), in.nextInt(), in.nextInt(), in.nextInt()};
+                    opponentBag = new int[]{in.nextInt(), in.nextInt(), in.nextInt(), in.nextInt()};
+                    opponentsScore = in.nextInt();
                 }
             }
 
